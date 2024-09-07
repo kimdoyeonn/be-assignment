@@ -1,0 +1,22 @@
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: my-mysql
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD} # 루트 계정 비밀번호 설정
+      MYSQL_DATABASE: ${DB_NAME} # 자동으로 생성될 데이터베이스 이름
+      MYSQL_USER: ${DB_NAME} # 추가 사용자 이름
+      MYSQL_PASSWORD: ${DB_PASSWORD} # 추가 사용자의 비밀번호
+    ports:
+      - '3306:3306'
+    volumes:
+      - mysql_data:/var/lib/mysql # 데이터베이스 데이터가 저장될 위치
+    networks:
+      - my_network
+
+volumes:
+  mysql_data:
+
+networks:
+  my_network:
