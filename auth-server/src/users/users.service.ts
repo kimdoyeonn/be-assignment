@@ -22,8 +22,13 @@ export class UsersService {
    * @param username 계정명
    * @returns 유저 데이터 | null
    */
-  async findOne(username: string): Promise<User | null> {
+  async findOneByUsername(username: User['username']): Promise<User | null> {
     const result = await this.userRepository.findOneBy({ username });
+    return result;
+  }
+
+  async findOneById(userId: User['id']) {
+    const result = await this.userRepository.findOneBy({ id: userId });
     return result;
   }
 
@@ -56,6 +61,17 @@ export class UsersService {
     });
 
     return result;
+  }
+
+  async updateRefreshToken(
+    userId: User['id'],
+    refreshToken: User['refreshToken'],
+  ) {
+    await this.userRepository.update({ id: userId }, { refreshToken });
+  }
+
+  async removeRefreshToken(userId: User['id']) {
+    await this.userRepository.update({ id: userId }, { refreshToken: null });
   }
 
   /**
