@@ -14,3 +14,8 @@ export type UserInfo = {
   id: User['id'];
   username: User['username'];
 };
+
+export type AuthInfo = {
+  name?: string;
+  message?: string;
+};

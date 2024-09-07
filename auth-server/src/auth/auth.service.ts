@@ -1,4 +1,8 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { UsersService } from '../users/users.service';
 import * as bcrypt from 'bcrypt';
 import { JwtService } from '@nestjs/jwt';
@@ -20,9 +24,14 @@ export class AuthService {
     password: string,
   ): Promise<UserInfo | null> {
     const user = await this.usersService.findOneByUsername(username);
+
+    if (user === null) {
+      return null;
+    }
+
     const isPasswordValid = await bcrypt.compare(password, user.password);
 
-    if (user && isPasswordValid) {
+    if (isPasswordValid) {
       return {
         id: user.id,
         username,
@@ -64,25 +73,40 @@ export class AuthService {
   }
 
   async validateRefreshToken(refreshToken: string) {
-    const payload = this.jwtService.verify(refreshToken, {
-      secret: this.configService.get<string>('JWT_REFRESH_SECRET'),
-    });
+    try {
+      const payload = this.jwtService.verify(refreshToken, {
+        secret: this.configService.get<string>('JWT_REFRESH_SECRET'),
+      });
 
-    const user = await this.usersService.findOneById(payload.sub);
-    const storedToken = user.refreshToken;
+      const user = await this.usersService.findOneById(payload.sub);
+      const storedToken = user.refreshToken;
 
-    if (!storedToken || storedToken !== refreshToken) {
-      throw new BadRequestException('Invalid refresh token');
+      if (!storedToken || storedToken !== refreshToken) {
+        throw new BadRequestException('Invalid refresh token');
+      }
+
+      return payload;
+    } catch (err) {
+      console.log('JWT ERROR', err);
+
+      // 토큰이 만료된 경우
+      if (err && err.name === 'TokenExpiredError') {
+        throw new UnauthorizedException(
+          'Token has expired. Please login again.',
+        );
+      }
+
+      // 토큰이 유효하지 않은 경우
+      if (err && err.name === 'JsonWebTokenError') {
+        throw new UnauthorizedException('Invalid token. Please login again.');
+      }
     }
-
-    return user;
   }
 
   async refreshAccessToken(providedRefreshToken: string) {
     const user = await this.validateRefreshToken(providedRefreshToken);
 
     const payload = { sub: user.id, username: user.username };
-
     const generatedAccessToken = this.generateAccessToken(payload);
 
     return {

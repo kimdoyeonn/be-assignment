@@ -12,23 +12,52 @@ import { CreateUserDto } from './dto/create-user.dto';
 import { AuthService } from '../auth/auth.service';
 import { LocalAuthGuard } from '../auth/local-auth.guard';
 import { User } from '../entity/user.entity';
-import { Public } from '../decorator/is-public.decorator';
 import { UserInfo } from '../auth/auth.types';
+import {
+  ApiBadRequestResponse,
+  ApiConflictResponse,
+  ApiCreatedResponse,
+  ApiTags,
+  ApiUnauthorizedResponse,
+} from '@nestjs/swagger';
 
 interface UserRequest extends Request {
   user: UserInfo;
 }
 
 @Controller('users')
+@ApiTags('users')
 export class UsersController {
   constructor(
     private readonly usersService: UsersService,
     private readonly authService: AuthService,
   ) {}
 
-  @Public()
-  @Post('/sign-up')
+  /**
+   * 회원가입
+   * @param createUserDto 회원가입 정보
+   */
+  @ApiBadRequestResponse({
+    description: 'username 또는 password가 유효하지 않은 경우',
+    schema: {
+      properties: {
+        message: { example: 'Unauthorized' },
+        statusCode: { example: 401 },
+      },
+    },
+  })
+  @ApiConflictResponse({
+    description: '중복된 username인 경우',
+    schema: {
+      properties: {
+        message: { example: 'Invalid username' },
+        error: { example: 'Bad Request' },
+        statusCode: { example: 400 },
+      },
+    },
+  })
   @HttpCode(HttpStatus.NO_CONTENT)
+  @Post('/sign-up')
   async signUp(@Body() createUserDto: CreateUserDto) {
     await this.usersService.createUser({
       username: createUserDto.username,
@@ -36,7 +65,39 @@ export class UsersController {
     });
   }
 
-  @Public()
+  /**
+   * 로그인
+   * @param req
+   * @returns
+   */
+  @ApiUnauthorizedResponse({
+    description: '로그인 정보가 유효하지 않은 경우',
+    schema: {
+      properties: {
+        message: { example: 'Unauthorized' },
+        statusCode: { example: 401 },
+      },
+    },
+  })
+  @ApiCreatedResponse({
+    description: '로그인 성공',
+    schema: {
+      properties: {
+        accessToken: {
+          type: 'string',
+          description: 'access token',
+          example:
+            'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOjMsInVzZXJuYW1lIjoidGVzdDEyMzIyMiIsImlhdCI6MTcyNTcxNTQzNywiZXhwIjoxNzI1NzE3MjM3fQ.E7l8l8-yNmM7MiVjWG7RCuDFOhuoq5uHrjGI8a38A5E',
+        },
+        refreshToken: {
+          type: 'string',
+          description: 'refresh token',
+          example:
+            'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOjMsInVzZXJuYW1lIjoidGVzdDEyMzIyMiIsImlhdCI6MTcyNTcxNTExNSwiZXhwIjoxNzI4MzA3MTE1fQ.GC_tEwjWTUc5JCVBUsSeoJxrzPMLwqKRwooXm8_OdD0',
+        },
+      },
+    },
+  })
   @UseGuards(LocalAuthGuard)
   @Post('/sign-in')
   async signIn(
@@ -46,14 +107,49 @@ export class UsersController {
     return result;
   }
 
+  /**
+   * 로그아웃
+   * @param userId
+   */
   @Post('/logout')
+  @HttpCode(HttpStatus.NO_CONTENT)
   async logout(@Body('userId') userId: User['id']) {
     await this.authService.removeRefreshToken(userId);
   }
 
-  @Public()
+  /**
+   *
+   * @param refreshToken
+   * @returns
+   */
+  @ApiCreatedResponse({
+    description: '성공',
+    schema: {
+      properties: {
+        accessToken: {
+          type: 'string',
+          description: 'access token',
+          example:
+            'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOjMsInVzZXJuYW1lIjoidGVzdDEyMzIyMiIsImlhdCI6MTcyNTcxNTQzNywiZXhwIjoxNzI1NzE3MjM3fQ.E7l8l8-yNmM7MiVjWG7RCuDFOhuoq5uHrjGI8a38A5E',
+        },
+      },
+    },
+  })
+  @ApiUnauthorizedResponse({
+    description: '유효하지 않은 토큰',
+    schema: {
+      properties: {
+        message: { example: 'Invalid token. Please login again.' },
+        error: { example: 'Unauthorized' },
+        statusCode: { example: 401 },
+      },
+    },
+  })
   @Post('/refresh')
-  async refresh(@Body('refreshToken') refreshToken: User['refreshToken']) {
+  async refresh(
+    @Request() req,
+    @Body('refreshToken') refreshToken: User['refreshToken'],
+  ): Promise<{ accessToken: string }> {
     const tokens = await this.authService.refreshAccessToken(refreshToken);
     return tokens;
   }

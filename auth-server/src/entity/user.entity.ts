@@ -10,5 +10,5 @@ export class User extends BaseEntity {
   password: string;
 
   @Column({ type: 'varchar', length: 255, nullable: true })
-  refreshToken: string;
+  refreshToken?: string;
 }

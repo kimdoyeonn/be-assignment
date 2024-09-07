@@ -1,7 +1,11 @@
-import { ExecutionContext, Injectable } from '@nestjs/common';
+import {
+  ExecutionContext,
+  Injectable,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { AuthGuard } from '@nestjs/passport';
-import { IS_PUBLIC_KEY } from 'src/decorator/is-public.decorator';
+import { AuthInfo, JwtUser } from './auth.types';
 
 @Injectable()
 export class JwtAuthGuard extends AuthGuard('jwt') {
@@ -9,14 +13,30 @@ export class JwtAuthGuard extends AuthGuard('jwt') {
     super();
   }
   canActivate(context: ExecutionContext) {
-    const isPublic = this.reflector.getAllAndOverride<boolean>(IS_PUBLIC_KEY, [
-      context.getHandler(),
-      context.getClass(),
-    ]);
-
-    if (isPublic === true) {
-      return true;
-    }
     return super.canActivate(context);
+  }
+
+  handleRequest<TUser extends JwtUser>(
+    err: Error,
+    user: TUser,
+    info: AuthInfo,
+  ): TUser {
+    if (err || !user) {
+      // 토큰이 만료된 경우
+      if (info && info.name === 'TokenExpiredError') {
+        throw new UnauthorizedException(
+          'Token has expired. Please login again.',
+        );
+      }
+
+      // 토큰이 유효하지 않은 경우
+      if (info && info.name === 'JsonWebTokenError') {
+        throw new UnauthorizedException('Invalid token. Please login again.');
+      }
+
+      throw new UnauthorizedException('Authentication failed');
+    }
+
+    return user;
   }
 }
