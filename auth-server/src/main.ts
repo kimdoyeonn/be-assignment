@@ -2,6 +2,8 @@ import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { ValidationPipe } from '@nestjs/common';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
+import { Transport } from '@nestjs/microservices';
+import { join } from 'path';
 
 const config = new DocumentBuilder()
   .setTitle('알레테이아 API')
@@ -13,6 +15,15 @@ const config = new DocumentBuilder()
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
+  app.connectMicroservice({
+    transport: Transport.GRPC,
+    options: {
+      package: 'users',
+      protoPath: join(__dirname, 'users/users.proto'),
+      url: 'localhost:50051',
+    },
+  });
+
   app.useGlobalPipes(
     new ValidationPipe({
       stopAtFirstError: true, // 맨 처음 발생한 하나의 에러만 반환 (나머지 검증 skip)
@@ -23,6 +34,7 @@ async function bootstrap() {
   const document = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('api', app, document);
 
-  await app.listen(3000);
+  await app.startAllMicroservices();
+  await app.listen(8888);
 }
 bootstrap();

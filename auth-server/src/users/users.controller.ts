@@ -20,6 +20,7 @@ import {
   ApiTags,
   ApiUnauthorizedResponse,
 } from '@nestjs/swagger';
+import { GrpcMethod } from '@nestjs/microservices';
 
 interface UserRequest extends Request {
   user: UserInfo;
@@ -32,6 +33,16 @@ export class UsersController {
     private readonly usersService: UsersService,
     private readonly authService: AuthService,
   ) {}
+
+  @GrpcMethod('UsersService')
+  validateToken(
+    { token }: { token: string },
+    // metadata: Metadata,
+    // call: ServerUnaryCall<any, any>,
+  ): string {
+    console.log('test : ', token);
+    return token;
+  }
 
   /**
    * 회원가입
