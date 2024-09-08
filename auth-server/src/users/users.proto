@@ -1,0 +1,19 @@
+syntax = "proto3";
+
+package users;
+
+service UsersService {
+  // 토큰 검증 메서드
+  rpc ValidateToken (ValidateTokenRequest) returns (ValidateTokenResponse);
+}
+
+// ValidateToken 요청
+message ValidateTokenRequest {
+  string token = 1;
+}
+
+// ValidateToken 응답
+message ValidateTokenResponse {
+  string userId = 1;
+  string username = 2;
+}
