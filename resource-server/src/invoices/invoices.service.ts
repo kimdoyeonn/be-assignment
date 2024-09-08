@@ -77,7 +77,6 @@ export class InvoicesService {
    */
   async createInvoice(userId: number, createInvoiceDto: CreateInvoiceDto) {
     const { productId, amount, price, type } = createInvoiceDto;
-
     // 상품의 정보가 올바른지 검사합니다.
     await this.productsService.validateProduct({
       productId,
@@ -111,7 +110,6 @@ export class InvoicesService {
    */
   async updateShippingDetail(updateShippingDetailDto: UpdateShippingDetailDto) {
     const { orderNumber, shippingAddress, zipcode } = updateShippingDetailDto;
-
     await this.findOneByOrderNumberOrFail(orderNumber);
 
     await this.invoiceRepository.update(
@@ -150,7 +148,6 @@ export class InvoicesService {
    */
   async updateInvoiceState(updateInvoiceStateDto: UpdateInvoiceStateDto) {
     const { orderNumber, invoiceState, paymentAmount } = updateInvoiceStateDto;
-
     // 인보이스 정보가 올바른지 확인합니다.
     await this.validateInvoice({ orderNumber, invoiceState, paymentAmount });
 
