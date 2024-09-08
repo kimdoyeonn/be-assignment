@@ -2,6 +2,7 @@ import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { ValidationPipe } from '@nestjs/common';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
+import { AllExceptionsFilter } from './common/filters/all-exceptions.filter';
 
 const config = new DocumentBuilder()
   .setTitle('알레테이아 API: 자원서버')
@@ -20,6 +21,8 @@ async function bootstrap() {
       transform: true,
     }),
   );
+  // 로깅
+  app.useGlobalFilters(new AllExceptionsFilter());
 
   const document = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('api', app, document);
