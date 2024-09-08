@@ -24,6 +24,9 @@ export class Product extends BaseEntity {
   @Column('float')
   amount: number;
 
+  @Column('int')
+  price: number;
+
   @OneToMany(() => Invoice, (invoice) => invoice.product)
   invoices: Invoice[];
 }

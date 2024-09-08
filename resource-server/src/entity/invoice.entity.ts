@@ -3,15 +3,16 @@ import { BaseEntity } from './base.entity';
 import { Product, TransactionType } from './product.entity';
 
 export enum InvoiceState {
+  DRAFT = 'DRAFT',
   ORDER_COMPLETED = 'ORDER_COMPLETED',
   PAYMENT_COMPLETED = 'PAYMENT_COMPLETED',
-  RECEIVED = 'RECEIVED',
+  FULFILLMENT_COMPLETED = 'FULFILLMENT_COMPLETED',
 }
 
 @Entity()
 export class Invoice extends BaseEntity {
-  @Column()
-  orderId: string;
+  @Column({ unique: true })
+  orderNumber: string;
 
   @Column()
   userId: number;
@@ -34,11 +35,11 @@ export class Invoice extends BaseEntity {
   @Column('int')
   price: number;
 
-  @Column()
-  zipcode: string;
+  @Column({ nullable: true })
+  zipcode?: string;
 
-  @Column()
-  shippingAddress: string;
+  @Column({ nullable: true })
+  shippingAddress?: string;
 
   @Column({
     type: 'enum',
