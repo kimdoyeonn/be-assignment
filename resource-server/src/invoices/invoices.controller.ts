@@ -3,11 +3,45 @@ import { InvoicesService } from './invoices.service';
 import { CreateInvoiceDto } from './dto/create-invoice.dto';
 import { UpdateInvoiceStateDto } from './dto/update-invoice-state.dto';
 import { UpdateShippingDetailDto } from './dto/update-shipping-detail.dto';
+import {
+  ApiBadRequestResponse,
+  ApiConflictResponse,
+  ApiCreatedResponse,
+  ApiTags,
+} from '@nestjs/swagger';
 
+@ApiTags('invoices')
 @Controller('invoices')
 export class InvoicesController {
   constructor(private readonly invoicesService: InvoicesService) {}
 
+  /**
+   * 새로운 인보이스를 생성합니다.
+   * @param createInvoiceDto - 인보이스 생성에 필요한 데이터
+   * @returns 생성된 인보이스의 orderNumber
+   */
+  @ApiCreatedResponse({
+    description: '생성완료',
+    example: {
+      orderNumber: '240909-69MKSFLK',
+    },
+  })
+  @ApiBadRequestResponse({
+    description: '상품 유형이 맞지 않거나 가격이 일치하지 않을 경우',
+    example: {
+      message: 'Invalid Product type',
+      error: 'Bad Request',
+      statusCode: 400,
+    },
+  })
+  @ApiConflictResponse({
+    description: '상품의 재고가 부족할 경우',
+    example: {
+      message: 'Insufficient stock for the requested item.',
+      error: 'Conflict',
+      statusCode: 409,
+    },
+  })
   @Post()
   async createInvoice(@Body() createInvoiceDto: CreateInvoiceDto) {
     const { productId, price, amount, type } = createInvoiceDto;
@@ -24,6 +58,18 @@ export class InvoicesController {
     return { orderNumber: invoice.orderNumber };
   }
 
+  /**
+   * 인보이스 배송정보를 업데이트합니다.
+   * @param UpdateShippingDetailDto - 인보이스 배송정보를 업데이트할 때 필요한 정보
+   */
+  @ApiBadRequestResponse({
+    description: '인보이스가 존재하지 않을 경우',
+    example: {
+      message: 'Invalid Invoice',
+      error: 'Bad Request',
+      statusCode: 400,
+    },
+  })
   @Patch('/shipping')
   async updateShippingDetail(
     @Body() UpdateShippingDetailDto: UpdateShippingDetailDto,
@@ -38,6 +84,19 @@ export class InvoicesController {
     });
   }
 
+  /**
+   * 인보이스 상태 업데이트
+   * @param updateInvoiceStateDto - 인보이스 상태 업데이트에 필요한 데이터
+   */
+  @ApiConflictResponse({
+    description:
+      '인보이스가 존재하지 않거나 결제 금액이 인보이스 금액과 일치하지 않을 경우 발생',
+    example: {
+      message: 'Mismatched price',
+      error: 'Bad Request',
+      statusCode: 400,
+    },
+  })
   @Patch('/state')
   async updateInvoiceState(
     @Body() updateInvoiceStateDto: UpdateInvoiceStateDto,

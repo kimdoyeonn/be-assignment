@@ -104,6 +104,11 @@ export class InvoicesService {
     return result;
   }
 
+  /**
+   * 인보이스 배송정보를 업데이트합니다.
+   * @param updateShippingDetailDto - 인보이스 배송정보를 업데이트할 때 필요한 정보
+   * @throws BadRequestException - 인보이스가 존재하지 않을 경우 발생
+   */
   async updateShippingDetail(updateShippingDetailDto: UpdateShippingDetailDto) {
     const { orderNumber, shippingAddress, zipcode } = updateShippingDetailDto;
 
