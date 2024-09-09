@@ -3,6 +3,7 @@ import {
   Controller,
   HttpCode,
   HttpStatus,
+  Logger,
   Post,
   Request,
   UseGuards,
@@ -12,7 +13,7 @@ import { CreateUserDto } from './dto/create-user.dto';
 import { AuthService } from '../auth/auth.service';
 import { LocalAuthGuard } from '../auth/local-auth.guard';
 import { User } from '../entity/user.entity';
-import { UserInfo } from '../auth/auth.types';
+import { PayloadUser, UserInfo } from '../auth/auth.types';
 import {
   ApiBadRequestResponse,
   ApiConflictResponse,
@@ -29,19 +30,27 @@ interface UserRequest extends Request {
 @Controller('users')
 @ApiTags('users')
 export class UsersController {
+  private readonly logger = new Logger(UsersController.name);
+
   constructor(
     private readonly usersService: UsersService,
     private readonly authService: AuthService,
   ) {}
 
-  @GrpcMethod('UsersService')
-  validateToken(
-    { token }: { token: string },
-    // metadata: Metadata,
-    // call: ServerUnaryCall<any, any>,
-  ): string {
-    console.log('test : ', token);
-    return token;
+  @GrpcMethod('UsersService', 'validateToken')
+  validateToken({ accessToken }: { accessToken: string }): {
+    isValid: boolean;
+    payload?: PayloadUser;
+    message?: string;
+  } {
+    try {
+      const { isValid, payload } =
+        this.authService.validateAccessToken(accessToken);
+      return { isValid, payload };
+    } catch (e) {
+      this.logger.error(e);
+      return { isValid: false, message: e.message };
+    }
   }
 
   /**

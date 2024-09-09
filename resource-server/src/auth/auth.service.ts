@@ -13,15 +13,20 @@ export class AuthService implements OnModuleInit {
     options: {
       package: 'users',
       protoPath: join(__dirname, 'users.proto'),
+      url: 'localhost:50051',
     },
   })
   client: ClientGrpc;
-
   onModuleInit() {
     this.usersService = this.client.getService<any>('UsersService');
   }
 
-  validateToken(): Observable<string> {
-    return this.usersService.validateToken({ token: '' });
+  validateToken(accessToken: string): Observable<{
+    isValid: boolean;
+    message?: string;
+    payload: { sub: number; username: string };
+  }> {
+    const result = this.usersService.validateToken({ accessToken });
+    return result;
   }
 }

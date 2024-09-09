@@ -5,6 +5,7 @@ import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { AllExceptionsFilter } from './common/filters/all-exceptions.filter';
 import { Transport } from '@nestjs/microservices';
 import { join } from 'path';
+import { AuthService } from './auth/auth.service';
 
 const config = new DocumentBuilder()
   .setTitle('알레테이아 API: 자원서버')
@@ -34,6 +35,12 @@ async function bootstrap() {
   );
   // 로깅
   app.useGlobalFilters(new AllExceptionsFilter());
+
+  // AuthService request 객체에 주입
+  app.use((req, res, next) => {
+    req.authService = app.get(AuthService);
+    next();
+  });
 
   const document = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('api', app, document);

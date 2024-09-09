@@ -2,6 +2,7 @@ import {
   BadRequestException,
   ConflictException,
   Injectable,
+  UnauthorizedException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Invoice, InvoiceState } from 'src/entity/invoice.entity';
@@ -12,6 +13,8 @@ import { UpdateInvoiceStateDto } from './dto/update-invoice-state.dto';
 import { formatDateYYMMDD } from 'src/utils/date.utils';
 import { UpdateShippingDetailDto } from './dto/update-shipping-detail.dto';
 import { InvoiceQueryDto } from './dto/invoice-query.dto';
+import InvoiceDetailResponseDto from './dto/invoice-detail-response.dto';
+import InvoiceResponseDto from './dto/invoice-response.dto';
 
 @Injectable()
 export class InvoicesService {
@@ -30,7 +33,7 @@ export class InvoicesService {
   async getInvoices(
     userId,
     invoiceQueryDto: InvoiceQueryDto,
-  ): Promise<Invoice[]> {
+  ): Promise<InvoiceResponseDto[]> {
     const { minDate, maxDate, offset, limit, invoiceType } = invoiceQueryDto;
 
     const invoices = await this.invoiceRepository.find({
@@ -58,6 +61,31 @@ export class InvoicesService {
     });
 
     return invoices;
+  }
+
+  async getInvoice(
+    userId: Invoice['userId'],
+    orderNumber: Invoice['orderNumber'],
+  ): Promise<InvoiceDetailResponseDto> {
+    const invoice = await this.invoiceRepository.findOne({
+      select: [
+        'orderNumber',
+        'userId',
+        'state',
+        'productId',
+        'amount',
+        'price',
+        'createdAt',
+        'shippingAddress',
+        'shippingAddressDetail',
+        'shippingName',
+        'shippingPhoneNumber',
+      ],
+      where: { userId, orderNumber },
+      relations: ['product'],
+    });
+
+    return invoice;
   }
 
   /**
@@ -147,10 +175,18 @@ export class InvoicesService {
    * 인보이스 배송정보를 업데이트합니다.
    * @param updateShippingDetailDto - 인보이스 배송정보를 업데이트할 때 필요한 정보
    * @throws BadRequestException - 인보이스가 존재하지 않을 경우 발생
+   * @throws UnauthorizedException - 유저 정보가 올바르지 않은 경우 발생
    */
-  async updateShippingDetail(updateShippingDetailDto: UpdateShippingDetailDto) {
+  async updateShippingDetail(
+    userId: number,
+    updateShippingDetailDto: UpdateShippingDetailDto,
+  ) {
     const { orderNumber, shippingAddress, zipcode } = updateShippingDetailDto;
-    await this.findOneByOrderNumberOrFail(orderNumber);
+    const invoice = await this.findOneByOrderNumberOrFail(orderNumber);
+
+    if (invoice.userId !== userId) {
+      throw new UnauthorizedException();
+    }
 
     await this.invoiceRepository.update(
       { orderNumber },
@@ -164,11 +200,19 @@ export class InvoicesService {
    * @param updateInvoiceStateDto - 인보이스 상태 변경에 필요한 데이터
    * @returns 인보이스 객체를 반환
    * @throws ConflictException - 결제 금액이 인보이스 금액과 일치하지 않을 경우 발생
+   * @throws UnauthorizedException - 유저 정보가 올바르지 않은 경우 발생
    */
-  async validateInvoice(updateInvoiceStateDto: UpdateInvoiceStateDto) {
+  async validateInvoice(
+    userId: number,
+    updateInvoiceStateDto: UpdateInvoiceStateDto,
+  ) {
     const { orderNumber, invoiceState, paymentAmount } = updateInvoiceStateDto;
 
     const invoice = await this.findOneByOrderNumberOrFail(orderNumber);
+
+    if (invoice.userId !== userId) {
+      throw new UnauthorizedException();
+    }
 
     if (
       invoiceState === InvoiceState.PAYMENT_COMPLETED &&
@@ -186,10 +230,17 @@ export class InvoicesService {
    *
    * @param updateInvoiceStateDto - 인보이스 상태 업데이트에 필요한 데이터
    */
-  async updateInvoiceState(updateInvoiceStateDto: UpdateInvoiceStateDto) {
+  async updateInvoiceState(
+    userId: number,
+    updateInvoiceStateDto: UpdateInvoiceStateDto,
+  ) {
     const { orderNumber, invoiceState, paymentAmount } = updateInvoiceStateDto;
     // 인보이스 정보가 올바른지 확인합니다.
-    await this.validateInvoice({ orderNumber, invoiceState, paymentAmount });
+    await this.validateInvoice(userId, {
+      orderNumber,
+      invoiceState,
+      paymentAmount,
+    });
 
     await this.invoiceRepository.update(
       { orderNumber },

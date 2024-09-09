@@ -1,5 +1,5 @@
 import { Observable } from 'rxjs';
 
 export interface UsersService {
-  validateToken(data: { token: string }): Observable<any>;
+  validateToken(data: { accessToken: string }): Observable<any>;
 }

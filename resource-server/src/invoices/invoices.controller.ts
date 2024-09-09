@@ -1,4 +1,12 @@
-import { Body, Controller, Get, Param, Patch, Post } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  Param,
+  Patch,
+  Post,
+  Query,
+} from '@nestjs/common';
 import { InvoicesService } from './invoices.service';
 import { CreateInvoiceDto } from './dto/create-invoice.dto';
 import { UpdateInvoiceStateDto } from './dto/update-invoice-state.dto';
@@ -10,13 +18,19 @@ import {
   ApiTags,
 } from '@nestjs/swagger';
 import { InvoiceQueryDto } from './dto/invoice-query.dto';
-import { Invoice } from 'src/entity/invoice.entity';
 import { ApiResponseDto } from 'src/common/dto/api-response.dto';
+import InvoiceResponseDto from './dto/invoice-response.dto';
+import InvoiceDetailResponseDto from './dto/invoice-detail-response.dto';
+import { AuthService } from 'src/auth/auth.service';
+import { AuthenticatedUser } from 'src/common/decorators/authenticated-user';
 
 @ApiTags('invoices')
 @Controller('invoices')
 export class InvoicesController {
-  constructor(private readonly invoicesService: InvoicesService) {}
+  constructor(
+    private readonly invoicesService: InvoicesService,
+    private readonly authService: AuthService,
+  ) {}
 
   /**
    * 인보이스 목록을 조회합니다.
@@ -25,13 +39,12 @@ export class InvoicesController {
    */
   @Get()
   async getInvoices(
-    @Param() invoiceQueryDto: InvoiceQueryDto,
-  ): Promise<{ data: { invoices: Invoice[] } }> {
-    // TODO 유저 검증
-    const userId = 2;
+    @AuthenticatedUser() user: { userId: number; username: string },
+    @Query() invoiceQueryDto: InvoiceQueryDto,
+  ): Promise<ApiResponseDto<{ invoices: InvoiceResponseDto[] }>> {
     const { minDate, maxDate, limit, offset, invoiceType } = invoiceQueryDto;
 
-    const invoices = await this.invoicesService.getInvoices(userId, {
+    const invoices = await this.invoicesService.getInvoices(user.userId, {
       minDate,
       maxDate,
       limit,
@@ -40,6 +53,23 @@ export class InvoicesController {
     });
 
     return new ApiResponseDto(true, { invoices }, 'Success');
+  }
+
+  /**
+   * orderNumber에 해당하는 인보이스를 조회합니다.
+   * @param orderNumber - 주문번호
+   * @returns 조회한 인보이스
+   */
+  @Get(':orderNumber')
+  async getInvoice(
+    @AuthenticatedUser() user: { userId: number; username: string },
+    @Param('orderNumber') orderNumber,
+  ): Promise<ApiResponseDto<{ invoice: InvoiceDetailResponseDto }>> {
+    const invoice = await this.invoicesService.getInvoice(
+      user.userId,
+      orderNumber,
+    );
+    return new ApiResponseDto(true, { invoice }, 'Success');
   }
 
   /**
@@ -70,12 +100,13 @@ export class InvoicesController {
     },
   })
   @Post()
-  async createInvoice(@Body() createInvoiceDto: CreateInvoiceDto) {
+  async createInvoice(
+    @AuthenticatedUser() user: { userId: number; username: string },
+    @Body() createInvoiceDto: CreateInvoiceDto,
+  ) {
     const { productId, price, amount, type } = createInvoiceDto;
-    // TODO: token 검증
-    const userId = 2;
 
-    const invoice = await this.invoicesService.createInvoice(userId, {
+    const invoice = await this.invoicesService.createInvoice(user.userId, {
       productId,
       price,
       amount,
@@ -103,12 +134,12 @@ export class InvoicesController {
   })
   @Patch('/shipping')
   async updateShippingDetail(
+    @AuthenticatedUser() user: { userId: number; username: string },
     @Body() UpdateShippingDetailDto: UpdateShippingDetailDto,
   ) {
     const { orderNumber, shippingAddress, zipcode } = UpdateShippingDetailDto;
-    // TODO: token 검증
 
-    await this.invoicesService.updateShippingDetail({
+    await this.invoicesService.updateShippingDetail(user.userId, {
       orderNumber,
       shippingAddress,
       zipcode,
@@ -130,12 +161,12 @@ export class InvoicesController {
   })
   @Patch('/state')
   async updateInvoiceState(
+    @AuthenticatedUser() user: { userId: number; username: string },
     @Body() updateInvoiceStateDto: UpdateInvoiceStateDto,
   ) {
     const { orderNumber, invoiceState, paymentAmount } = updateInvoiceStateDto;
-    // TODO: token 검증
 
-    await this.invoicesService.updateInvoiceState({
+    await this.invoicesService.updateInvoiceState(user.userId, {
       orderNumber,
       invoiceState,
       paymentAmount,

@@ -4,16 +4,22 @@ package users;
 
 service UsersService {
   // 토큰 검증 메서드
-  rpc ValidateToken (ValidateTokenRequest) returns (ValidateTokenResponse);
+  rpc ValidateToken (ValidateTokenRequest) returns (ValidateTokenResponse) {};
 }
 
 // ValidateToken 요청
 message ValidateTokenRequest {
-  string token = 1;
+  string accessToken = 1;
 }
 
 // ValidateToken 응답
 message ValidateTokenResponse {
-  string userId = 1;
+  bool isValid = 1;
+  Payload payload = 2; 
+  string message = 3;
+}
+
+message Payload {
+  int32 sub = 1;
   string username = 2;
 }
