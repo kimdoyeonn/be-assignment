@@ -1,4 +1,4 @@
-import { Body, Controller, Patch, Post } from '@nestjs/common';
+import { Body, Controller, Get, Param, Patch, Post } from '@nestjs/common';
 import { InvoicesService } from './invoices.service';
 import { CreateInvoiceDto } from './dto/create-invoice.dto';
 import { UpdateInvoiceStateDto } from './dto/update-invoice-state.dto';
@@ -9,11 +9,38 @@ import {
   ApiCreatedResponse,
   ApiTags,
 } from '@nestjs/swagger';
+import { InvoiceQueryDto } from './dto/invoice-query.dto';
+import { Invoice } from 'src/entity/invoice.entity';
+import { ApiResponseDto } from 'src/common/dto/api-response.dto';
 
 @ApiTags('invoices')
 @Controller('invoices')
 export class InvoicesController {
   constructor(private readonly invoicesService: InvoicesService) {}
+
+  /**
+   * 인보이스 목록을 조회합니다.
+   * @param invoiceQueryDto - 인보이스 조회 조건
+   * @returns 조회된 인보이스 목록
+   */
+  @Get()
+  async getInvoices(
+    @Param() invoiceQueryDto: InvoiceQueryDto,
+  ): Promise<{ data: { invoices: Invoice[] } }> {
+    // TODO 유저 검증
+    const userId = 2;
+    const { minDate, maxDate, limit, offset, invoiceType } = invoiceQueryDto;
+
+    const invoices = await this.invoicesService.getInvoices(userId, {
+      minDate,
+      maxDate,
+      limit,
+      offset,
+      invoiceType,
+    });
+
+    return new ApiResponseDto(true, { invoices }, 'Success');
+  }
 
   /**
    * 새로운 인보이스를 생성합니다.
@@ -55,7 +82,11 @@ export class InvoicesController {
       type,
     });
 
-    return { orderNumber: invoice.orderNumber };
+    return new ApiResponseDto(
+      true,
+      { orderNumber: invoice.orderNumber },
+      'Success',
+    );
   }
 
   /**

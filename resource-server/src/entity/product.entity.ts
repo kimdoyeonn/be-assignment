@@ -9,21 +9,36 @@ export enum TransactionType {
 
 @Entity()
 export class Product extends BaseEntity {
-  @Column('varchar')
+  /**
+   * 상품명
+   */
+  @Column({ type: 'varchar', length: 30 })
   name: string;
 
+  /**
+   * 순도
+   */
   @Column('float')
   purity: number;
 
+  /**
+   * 거래 유형
+   */
   @Column({
     type: 'enum',
     enum: TransactionType,
   })
   type: TransactionType;
 
-  @Column('float')
+  /**
+   * 재고 수량
+   */
+  @Column({ type: 'float', select: false })
   amount: number;
 
+  /**
+   * 가격
+   */
   @Column('int')
   price: number;
 

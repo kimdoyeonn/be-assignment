@@ -5,12 +5,21 @@ import {
 } from 'typeorm';
 
 export abstract class BaseEntity {
+  /**
+   * ID
+   */
   @PrimaryGeneratedColumn()
   id: number;
 
-  @CreateDateColumn()
+  /**
+   * 생성일자
+   */
+  @CreateDateColumn({ select: false })
   createdAt: Date;
 
-  @UpdateDateColumn()
+  /**
+   * 수정일자
+   */
+  @UpdateDateColumn({ select: false })
   updatedAt: Date;
 }

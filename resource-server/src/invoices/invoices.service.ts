@@ -5,12 +5,13 @@ import {
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Invoice, InvoiceState } from 'src/entity/invoice.entity';
-import { Repository } from 'typeorm';
+import { Between, Not, Repository } from 'typeorm';
 import { CreateInvoiceDto } from './dto/create-invoice.dto';
 import { ProductsService } from 'src/products/products.service';
 import { UpdateInvoiceStateDto } from './dto/update-invoice-state.dto';
 import { formatDateYYMMDD } from 'src/utils/date.utils';
 import { UpdateShippingDetailDto } from './dto/update-shipping-detail.dto';
+import { InvoiceQueryDto } from './dto/invoice-query.dto';
 
 @Injectable()
 export class InvoicesService {
@@ -19,6 +20,45 @@ export class InvoicesService {
     private readonly invoiceRepository: Repository<Invoice>,
     private readonly productsService: ProductsService,
   ) {}
+
+  /**
+   * 주어진 조건에 맞는 인보이스를 조회합니다.
+   * @param userId - 사용자 ID
+   * @param invoiceQueryDto - 조회 조건
+   * @returns 조회된 인보이스 목록
+   */
+  async getInvoices(
+    userId,
+    invoiceQueryDto: InvoiceQueryDto,
+  ): Promise<Invoice[]> {
+    const { minDate, maxDate, offset, limit, invoiceType } = invoiceQueryDto;
+
+    const invoices = await this.invoiceRepository.find({
+      select: [
+        'orderNumber',
+        'userId',
+        'state',
+        'productId',
+        'amount',
+        'price',
+        'createdAt',
+      ],
+      where: {
+        userId,
+        createdAt: Between(
+          minDate || new Date('1900-01-01'),
+          maxDate || new Date(),
+        ),
+        ...(invoiceType !== null ? { type: invoiceType } : {}),
+        state: Not(InvoiceState.DRAFT),
+      },
+      skip: offset,
+      take: limit,
+      relations: ['product'],
+    });
+
+    return invoices;
+  }
 
   /**
    * 주어진 ID로 인보이스를 조회
