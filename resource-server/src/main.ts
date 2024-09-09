@@ -3,6 +3,8 @@ import { AppModule } from './app.module';
 import { ValidationPipe } from '@nestjs/common';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { AllExceptionsFilter } from './common/filters/all-exceptions.filter';
+import { Transport } from '@nestjs/microservices';
+import { join } from 'path';
 
 const config = new DocumentBuilder()
   .setTitle('알레테이아 API: 자원서버')
@@ -13,6 +15,15 @@ const config = new DocumentBuilder()
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
+
+  app.connectMicroservice({
+    transport: Transport.GRPC,
+    options: {
+      package: 'users',
+      protoPath: join(__dirname, 'auth/users.proto'),
+      url: 'localhost:50052',
+    },
+  });
 
   app.useGlobalPipes(
     new ValidationPipe({
@@ -27,6 +38,7 @@ async function bootstrap() {
   const document = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('api', app, document);
 
+  await app.startAllMicroservices();
   await app.listen(9999);
 }
 bootstrap();
