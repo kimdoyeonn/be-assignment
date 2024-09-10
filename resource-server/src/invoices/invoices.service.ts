@@ -68,22 +68,17 @@ export class InvoicesService {
     orderNumber: Invoice['orderNumber'],
   ): Promise<InvoiceDetailResponseDto> {
     const invoice = await this.invoiceRepository.findOne({
-      select: [
-        'orderNumber',
-        'userId',
-        'state',
-        'productId',
-        'amount',
-        'price',
-        'createdAt',
-        'shippingAddress',
-        'shippingAddressDetail',
-        'shippingName',
-        'shippingPhoneNumber',
-      ],
-      where: { userId, orderNumber },
+      where: { orderNumber },
       relations: ['product'],
     });
+
+    if (invoice === null) {
+      throw new BadRequestException();
+    }
+
+    if (invoice.userId !== userId) {
+      throw new UnauthorizedException();
+    }
 
     return invoice;
   }
