@@ -23,6 +23,7 @@ import InvoiceResponseDto from './dto/invoice-response.dto';
 import InvoiceDetailResponseDto from './dto/invoice-detail-response.dto';
 import { AuthService } from 'src/auth/auth.service';
 import { AuthenticatedUser } from 'src/common/decorators/authenticated-user';
+import { InvoiceState } from 'src/entity/invoice.entity';
 
 @ApiTags('invoices')
 @Controller('invoices')
@@ -170,6 +171,17 @@ export class InvoicesController {
       orderNumber,
       invoiceState,
       paymentAmount,
+    });
+  }
+
+  @Patch('/:orderNumber/cancel')
+  async cancelInvoice(
+    @AuthenticatedUser() user: { userId: number; username: string },
+    @Param('orderNumber') orderNumber: string,
+  ) {
+    await this.invoicesService.updateInvoiceState(user.userId, {
+      invoiceState: InvoiceState.CANCELED,
+      orderNumber,
     });
   }
 }

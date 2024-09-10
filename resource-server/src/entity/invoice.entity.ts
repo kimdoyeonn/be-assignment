@@ -4,7 +4,7 @@ import { Product, TransactionType } from './product.entity';
 
 export enum InvoiceState {
   DRAFT = 'DRAFT',
-  DELETED = 'DELETED',
+  CANCELED = 'CANCELED',
   ORDER_COMPLETED = 'ORDER_COMPLETED',
   PAYMENT_COMPLETED = 'PAYMENT_COMPLETED',
   FULFILLMENT_COMPLETED = 'FULFILLMENT_COMPLETED',

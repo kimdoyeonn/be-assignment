@@ -7,6 +7,12 @@ export enum TransactionType {
   PURCHASE = 'PURCHASE',
 }
 
+export enum ProductState {
+  DRAFT = 'DRAFT',
+  DISPLAYED = 'DISPLAYED',
+  HIDDEN = 'HIDDEN',
+}
+
 @Entity()
 export class Product extends BaseEntity {
   /**
@@ -44,4 +50,7 @@ export class Product extends BaseEntity {
 
   @OneToMany(() => Invoice, (invoice) => invoice.product)
   invoices: Invoice[];
+
+  @Column({ type: 'enum', enum: ProductState })
+  state: ProductState;
 }
