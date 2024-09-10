@@ -47,15 +47,18 @@ export class InvoicesController {
   ): Promise<ApiResponseDto<{ invoices: InvoiceResponseDto[] }>> {
     const { minDate, maxDate, limit, offset, invoiceType } = invoiceQueryDto;
 
-    const invoices = await this.invoicesService.getInvoices(user.userId, {
-      minDate,
-      maxDate,
-      limit,
-      offset,
-      invoiceType,
-    });
+    const { invoices, count } = await this.invoicesService.getInvoices(
+      user.userId,
+      {
+        minDate,
+        maxDate,
+        limit,
+        offset,
+        invoiceType,
+      },
+    );
 
-    return new ApiResponseDto(true, { invoices }, 'Success');
+    return new ApiResponseDto(true, { invoices, count }, 'Success');
   }
 
   /**

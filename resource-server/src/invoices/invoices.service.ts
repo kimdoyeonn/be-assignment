@@ -33,8 +33,20 @@ export class InvoicesService {
   async getInvoices(
     userId,
     invoiceQueryDto: InvoiceQueryDto,
-  ): Promise<InvoiceResponseDto[]> {
+  ): Promise<{ invoices: InvoiceResponseDto[]; count: number }> {
     const { minDate, maxDate, offset, limit, invoiceType } = invoiceQueryDto;
+
+    const [, count] = await this.invoiceRepository.findAndCount({
+      where: {
+        userId,
+        createdAt: Between(
+          minDate || new Date('1900-01-01'),
+          maxDate || new Date(),
+        ),
+        ...(invoiceType !== null ? { type: invoiceType } : {}),
+        state: Not(InvoiceState.DRAFT),
+      },
+    });
 
     const invoices = await this.invoiceRepository.find({
       select: [
@@ -60,7 +72,7 @@ export class InvoicesService {
       relations: ['product'],
     });
 
-    return invoices;
+    return { invoices, count };
   }
 
   async getInvoice(
