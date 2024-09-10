@@ -11,6 +11,7 @@ const config = new DocumentBuilder()
   .setTitle('알레테이아 API: 자원서버')
   .setDescription('금을 구매, 판매하는 서비스, 알레테이아의 API 문서입니다.')
   .setVersion('1.0')
+  .addBearerAuth()
   .addTag('aletheia')
   .build();
 

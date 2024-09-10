@@ -13,6 +13,7 @@ import { UpdateInvoiceStateDto } from './dto/update-invoice-state.dto';
 import { UpdateShippingDetailDto } from './dto/update-shipping-detail.dto';
 import {
   ApiBadRequestResponse,
+  ApiBearerAuth,
   ApiConflictResponse,
   ApiCreatedResponse,
   ApiTags,
@@ -38,6 +39,7 @@ export class InvoicesController {
    * @param invoiceQueryDto - 인보이스 조회 조건
    * @returns 조회된 인보이스 목록
    */
+  @ApiBearerAuth()
   @Get()
   async getInvoices(
     @AuthenticatedUser() user: { userId: number; username: string },
@@ -61,6 +63,7 @@ export class InvoicesController {
    * @param orderNumber - 주문번호
    * @returns 조회한 인보이스
    */
+  @ApiBearerAuth()
   @Get(':orderNumber')
   async getInvoice(
     @AuthenticatedUser() user: { userId: number; username: string },
@@ -100,6 +103,7 @@ export class InvoicesController {
       statusCode: 409,
     },
   })
+  @ApiBearerAuth()
   @Post()
   async createInvoice(
     @AuthenticatedUser() user: { userId: number; username: string },
@@ -133,6 +137,7 @@ export class InvoicesController {
       statusCode: 400,
     },
   })
+  @ApiBearerAuth()
   @Patch('/shipping')
   async updateShippingDetail(
     @AuthenticatedUser() user: { userId: number; username: string },
@@ -145,6 +150,8 @@ export class InvoicesController {
       shippingAddress,
       zipcode,
     });
+
+    return new ApiResponseDto(true, null, 'Success');
   }
 
   /**
@@ -160,6 +167,7 @@ export class InvoicesController {
       statusCode: 400,
     },
   })
+  @ApiBearerAuth()
   @Patch('/state')
   async updateInvoiceState(
     @AuthenticatedUser() user: { userId: number; username: string },
@@ -172,8 +180,11 @@ export class InvoicesController {
       invoiceState,
       paymentAmount,
     });
+
+    return new ApiResponseDto(true, null, 'Success');
   }
 
+  @ApiBearerAuth()
   @Patch('/:orderNumber/cancel')
   async cancelInvoice(
     @AuthenticatedUser() user: { userId: number; username: string },
@@ -183,5 +194,7 @@ export class InvoicesController {
       invoiceState: InvoiceState.CANCELED,
       orderNumber,
     });
+
+    return new ApiResponseDto(true, null, 'Success');
   }
 }
