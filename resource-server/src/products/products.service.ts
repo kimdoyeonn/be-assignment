@@ -24,7 +24,19 @@ export class ProductsService {
    * @throws BadRequestException - product가 존재하지 않을 경우 발생
    */
   async findOneByIdOrFail(id: Product['id']) {
-    const product = await this.productRepository.findOneBy({ id });
+    const product = await this.productRepository.findOne({
+      where: { id },
+      select: [
+        'id',
+        'amount',
+        'name',
+        'price',
+        'purity',
+        'type',
+        'createdAt',
+        'updatedAt',
+      ],
+    });
 
     if (product === null) {
       throw new NotFoundException('Product not found');
