@@ -130,10 +130,12 @@ export class AuthService {
   }
 
   async refreshAccessToken(providedRefreshToken: string) {
-    const user = await this.validateRefreshToken(providedRefreshToken);
+    const payload = await this.validateRefreshToken(providedRefreshToken);
 
-    const payload = { sub: user.id, username: user.username };
-    const generatedAccessToken = this.generateAccessToken(payload);
+    const generatedAccessToken = this.generateAccessToken({
+      sub: payload.sub,
+      username: payload.username,
+    });
 
     return {
       accessToken: generatedAccessToken,
