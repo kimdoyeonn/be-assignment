@@ -15,7 +15,7 @@ export class Invoice extends BaseEntity {
   /**
    * 주문번호
    */
-  @Column({ unique: true })
+  @Column({ unique: true, length: 27 })
   orderNumber: string;
 
   /**
@@ -30,6 +30,7 @@ export class Invoice extends BaseEntity {
   @Column({
     type: 'enum',
     enum: InvoiceState,
+    default: InvoiceState.DRAFT,
   })
   state: InvoiceState;
 
@@ -57,31 +58,31 @@ export class Invoice extends BaseEntity {
   /**
    * 우편번호
    */
-  @Column({ nullable: true })
+  @Column({ nullable: true, length: 6 })
   zipcode?: string;
 
   /**
    * 배송 주소
    */
-  @Column({ nullable: true })
+  @Column({ nullable: true, length: 255 })
   shippingAddress?: string;
 
   /**
    * 배송 주소 상세
    */
-  @Column({ nullable: true })
+  @Column({ nullable: true, length: 255 })
   shippingAddressDetail?: string;
 
   /**
    * 수령인
    */
-  @Column({ nullable: true })
+  @Column({ nullable: true, length: 255 })
   shippingName?: string;
 
   /**
    * 수령인 전화번호
    */
-  @Column({ nullable: true })
+  @Column({ nullable: true, length: 15 })
   shippingPhoneNumber?: string;
 
   /**

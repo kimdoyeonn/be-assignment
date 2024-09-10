@@ -51,6 +51,9 @@ export class Product extends BaseEntity {
   @OneToMany(() => Invoice, (invoice) => invoice.product)
   invoices: Invoice[];
 
+  /**
+   * 상품 상태
+   */
   @Column({ type: 'enum', enum: ProductState })
   state: ProductState;
 }
