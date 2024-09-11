@@ -1,0 +1,22 @@
+services:
+  mysql:
+    image: mariadb:10
+    container_name: auth-db-container
+    restart: always
+    environment:
+      MARIADB_ROOT_PASSWORD: ${MARIADB_ROOT_PASSWORD} # 루트 계정 비밀번호 설정
+      MARIADB_DATABASE: ${DB_NAME} # 자동으로 생성될 데이터베이스 이름
+      MARIADB_USER: ${DB_NAME} # 추가 사용자 이름
+      MARIADB_PASSWORD: ${DB_PASSWORD} # 추가 사용자의 비밀번호
+    ports:
+      - '${DB_PORT}:3306'
+    volumes:
+      - mariadb_data:/var/lib/maria # 데이터베이스 데이터가 저장될 위치
+    networks:
+      - my_network
+
+volumes:
+  mariadb_data:
+
+networks:
+  my_network:
