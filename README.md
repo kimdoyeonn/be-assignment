@@ -58,6 +58,10 @@ npm run start # 실행
 
 ![자원서버ERD](/erd/resourceERD.png)
 
+## POSTMAN
+
+[](https://lunar-crescent-491034.postman.co/workspace/Personal-Workspace~9c235865-9856-4546-969e-640bf1b6e875/collection/17978117-a18abeb4-6455-4e92-ac01-380aa6b64c2d?action=share&creator=17978117)
+
 ## 과제 분석
 
 ### 자원 서버
