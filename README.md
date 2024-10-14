@@ -112,10 +112,7 @@ npm run start # 실행
               // 구매 또는 판매 주문 detail
             }
             // ...
-          ],
-          "links": {
-            // pagination을 위한 추가적인 정보
-          }
+          ]
         }
         ```
 
